@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNOWLY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Josefin+Sans:wght@400;700&family=Cardo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Josefin Sans', sans-serif;
+            color: #d1d5db; /* gray-300 */
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-josefin { font-family: 'Josefin Sans', sans-serif; }
+        .font-cardo { font-family: 'Cardo', serif; }
+        .bg-glass {
+            background-color: rgba(26, 26, 54, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .prose p { margin-bottom: 1em; }
+        .prose ul, .prose ol { margin-top: 1em; margin-bottom: 1em; }
+        .prose sup {
+            vertical-align: super;
+            font-size: 0.7em;
+            line-height: 0;
+            cursor: pointer;
+            color: #d8b4fe;
+            transition: color 0.2s;
+        }
+        .prose sup:hover {
+            color: #a855f7;
+        }
+        .btn-primary {
+            box-shadow: 0 0 20px #a855f7;
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 30px #a855f7;
+        }
+        .tab-btn.active-tab {
+            border-color: #a855f7;
+            border-bottom-width: 2px;
+            color: #d8b4fe;
+        }
+
+        /* Modal specific styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: rgba(26, 26, 54, 0.9);
+            border-radius: 1rem;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 2rem;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            color: #d1d5db;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #e879f9;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#12002f] via-[#1a1a36] to-[#2b2b5a] min-h-screen p-4 sm:p-8">
+
+    <div id="app" class="max-w-5xl mx-auto bg-glass rounded-2xl shadow-lg p-6 sm:p-10 space-y-10 border border-purple-800/40">
+
+        <div id="main-interface" class="space-y-6">
+            <div class="text-center space-y-2 relative">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-wide leading-tight font-cinzel"
+                    style="text-shadow: 0 0 10px #e879f9, 0 0 20px #e879f9;">
+                  KNOWLY
+                </h1>
+                <p class="text-gray-400 text-sm sm:text-base font-cardo">
+                  Your Smart Research Assistant for the Modern World
+                </p>
+                <div class="absolute inset-0 z-0 pointer-events-none">
+                  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-10 rounded-full blur-2xl opacity-50 bg-purple-500 animate-pulse"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2 space-y-6">
+                    <div class="space-y-2">
+                        <label for="question" class="text-sm font-josefin text-purple-300">
+                          Type your question here...
+                        </label>
+                        <textarea
+                          id="question"
+                          class="w-full p-4 border border-purple-500/20 bg-gray-800/50 rounded-lg text-white font-cardo resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-200 placeholder-purple-200/50"
+                          rows="4"
+                          placeholder="e.g., What are the key trends in AI for drug discovery?"
+                        ></textarea>
+                    </div>
+
+                    <div
+                      id="drop-area"
+                      class="border-2 border-dashed border-purple-500/30 rounded-lg p-6 text-center transition-colors duration-200 hover:border-purple-500/50"
+                    >
+                        <svg
+                          class="mx-auto h-12 w-12 text-purple-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v8"
+                          />
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-400 font-cardo">
+                          <span class="font-semibold text-purple-300">Drag and drop files</span> or
+                          <button
+                            type="button"
+                            onclick="document.getElementById('file-input').click()"
+                            class="text-purple-400 hover:text-purple-300 focus:outline-none font-cardo"
+                          >
+                            browse
+                          </button>
+                        </p>
+                        <p class="text-xs text-gray-500 font-cardo">PDFs, Word Docs, etc. (up to 10MB)</p>
+                        <input
+                          id="file-input"
+                          type="file"
+                          multiple
+                          class="hidden"
+                          accept=".pdf,.doc,.docx,.txt"
+                        />
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-josefin text-purple-300 flex items-center gap-2">
+                          Uploaded Files (<span id="file-count">0</span>)
+                          <button
+                            onclick="document.getElementById('file-input').click()"
+                            class="w-6 h-6 rounded-full bg-purple-500/50 text-white flex items-center justify-center text-lg font-bold hover:bg-purple-500 transition duration-200"
+                            style="box-shadow: 0 0 8px #d8b4fe;"
+                            title="Add more files"
+                          >
+                            +
+                          </button>
+                        </h3>
+                        <button
+                          id="clear-btn"
+                          class="text-sm text-gray-500 hover:text-gray-300 transition-colors duration-200 font-josefin"
+                        >
+                          Clear All
+                        </button>
+                    </div>
+
+                    <div id="file-list" class="flex flex-wrap gap-2 py-2"></div>
+
+                    <button
+                      id="submit-btn"
+                      class="w-full py-4 px-4 rounded-lg font-bold transition duration-200 text-purple-200 text-lg btn-primary"
+                    >
+                        Generate Report
+                    </button>
+                </div>
+
+                <div class="md:col-span-1 space-y-6">
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-josefin text-purple-400">Dashboard</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col items-center p-4 rounded-xl bg-gray-800/50 border border-purple-500/20" style="box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400 mb-2" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM6 9a1 1 0 000 2h8a1 1 0 100-2H6zM4 13a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM7 15a1 1 0 100 2h6a1 1 0 100-2H7z"/></svg>
+                                <span id="question-count" class="font-semibold text-purple-300 font-josefin">0</span>
+                                <span class="text-xs text-gray-500 font-cardo">Questions</span>
+                            </div>
+                            <div class="flex flex-col items-center p-4 rounded-xl bg-gray-800/50 border border-purple-500/20" style="box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400 mb-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 00-8 8c0 4.418 3.582 8 8 8s8-3.582 8-8a8 8 0 00-8-8zM8 10a2 2 0 114 0 2 2 0 01-4 0z"/></svg>
+                                <span id="report-count" class="font-semibold text-purple-300 font-josefin">0</span>
+                                <span class="text-xs text-gray-500 font-cardo">Reports</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-josefin text-purple-400">Connect Feeds</h2>
+                        <div class="rounded-xl border border-purple-500/20 p-4 bg-gray-800/50" style="box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);">
+                            <p class="text-sm text-gray-500 text-center font-cardo">
+                                This feature will allow you to connect to live data sources.
+                            </p>
+                            <div class="flex justify-center mt-4">
+                                <button
+                                  class="py-2 px-4 rounded-lg text-purple-300 border border-purple-500/50 hover:bg-purple-600/20 transition-colors duration-200 font-josefin"
+                                  title="Toggle/connect to live feeds"
+                                >
+                                    Manage Feeds
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <button
+                          id="about-gemini-btn"
+                          class="w-full text-left flex justify-between items-center text-xl font-josefin text-purple-400 focus:outline-none hover:text-purple-300 transition-colors"
+                        >
+                            <span>About Gemini</span>
+                            <span class="text-lg">→</span>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <button
+                          id="history-toggle"
+                          class="w-full text-left flex justify-between items-center text-xl font-josefin text-purple-400 focus:outline-none"
+                        >
+                            <span>Past Reports</span>
+                            <span class="text-lg transition-transform duration-300">▼</span>
+                        </button>
+                        <div id="past-reports-list" class="transition-all duration-300 ease-in-out overflow-hidden max-h-0 opacity-0">
+                            <p class="text-sm text-gray-500 text-center font-cardo">No reports yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="report-view" class="space-y-6 hidden">
+            <div class="rounded-xl border border-purple-500/20 p-6 backdrop-blur-md bg-gray-900/50" style="box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);">
+                <div class="flex justify-between items-center border-b border-purple-500/10 pb-4 mb-4">
+                    <h2 class="text-3xl font-josefin text-purple-400">Research Report</h2>
+                    <button
+                      id="back-to-home-btn"
+                      class="text-sm text-gray-500 hover:text-gray-300 transition-colors duration-200 font-josefin"
+                    >
+                        &larr; Back to Home
+                    </button>
+                </div>
+
+                <div class="text-sm text-purple-400 font-josefin text-center mb-4">
+                    Generated by Gemini based on your provided documents.
+                </div>
+
+                <div class="prose text-gray-400 space-y-6 max-w-none font-cardo">
+                    <div class="flex justify-between items-center">
+                        <p class="text-md text-gray-400 font-semibold mb-2" id="report-question"></p>
+                        <span class="text-sm text-purple-400 font-josefin italic" id="report-freshness"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex space-x-2 border-b border-purple-500/10 mb-4" id="report-tabs">
+                        <button class="tab-btn active-tab py-2 px-4 rounded-t-lg transition-colors duration-200 font-josefin">Summary</button>
+                        <button class="tab-btn py-2 px-4 rounded-t-lg transition-colors duration-200 font-josefin">Sources</button>
+                        <button class="tab-btn py-2 px-4 rounded-t-lg transition-colors duration-200 font-josefin">Insights</button>
+                    </div>
+
+                    <div id="summary-content" class="tab-content active p-4 rounded-lg bg-gray-800/50 border border-purple-500/20"></div>
+                    <div id="sources-content" class="tab-content hidden p-4 rounded-lg bg-gray-800/50 border border-purple-500/20"></div>
+                    <div id="insights-content" class="tab-content hidden p-4 rounded-lg bg-gray-800/50 border border-purple-500/20"></div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center sm:justify-between gap-4">
+                    <button
+                      class="flex items-center gap-2 py-2 px-4 rounded-lg text-purple-300 border border-purple-500/50 hover:bg-purple-600/20 transition-colors duration-200 font-josefin"
+                      title="Adjust depth or angle of report"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-1.414 7.07l.793.792-.793.793-2.828-2.828.793-.793.793.793 2.828 2.828zM3 17.25V19a1 1 0 001 1h2.25l7.5-7.5-2.25-2.25-7.5 7.5z"/></svg>
+                      Regenerate
+                    </button>
+                    <button
+                      class="flex items-center gap-2 py-2 px-4 rounded-lg text-purple-300 border border-purple-500/50 hover:bg-purple-600/20 transition-colors duration-200 font-josefin"
+                      title="Export as PDF, DOCX, or Markdown"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13 2a2 2 0 00-2-2H5a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2zm0 18H5V2h6v2h-1a1 1 0 01-1-1V1h4v2H11a1 1 0 01-1 1v12h1a1 1 0 011 1v4H5a1 1 0 01-1-1v-4a1 1 0 011-1h1v-4a1 1 0 011-1h4v-2a1 1 0 011-1h-1a1 1 0 01-1-1V2h2a1 1 0 011 1v17z"/></svg>
+                      Export
+                    </button>
+                    <button
+                      class="flex items-center gap-2 py-2 px-4 rounded-lg text-purple-300 border border-purple-500/50 hover:bg-purple-600/20 transition-colors duration-200 font-josefin"
+                      title="Save this report to your library"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2h-2V3a1 1 0 00-1-1H9a1 1 0 00-1 1v1H5zM12 4v2h2V4h-2zM8 4v2h2V4H8z"/></svg>
+                      Save to Library
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="gemini-modal" class="modal">
+            <div class="modal-content relative">
+                <span id="close-modal-btn" class="close-btn">&times;</span>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-white tracking-wide leading-tight font-cinzel mb-4"
+                    style="text-shadow: 0 0 10px #e879f9, 0 0 20px #e879f9;">
+                  Powering KNOWLY
+                </h3>
+                <p class="text-gray-300 text-sm sm:text-base font-cardo">
+                  KNOWLY is powered by the **Gemini 2.5 Flash** model, a large language model from Google. It works in the background using a technique called **Retrieval-Augmented Generation (RAG)**.
+                </p>
+                <ul class="list-disc pl-5 mt-4 text-sm font-cardo text-gray-300 space-y-2">
+                    <li>
+                      **Retrieval:** When you upload a document, KNOWLY extracts the text and uses it as a knowledge base. The system also connects to a live data source to stay updated.
+                    </li>
+                    <li>
+                      **Augmentation:** Your question and the most relevant pieces of information from both your documents and the live data are combined into a single, powerful prompt. This instructs the model to act as a research assistant and use *only* the provided context.
+                    </li>
+                    <li>
+                      **Generation:** The model processes this augmented prompt to generate a concise, evidence-based report. By restricting the model to a curated set of retrieved facts, we ensure that the answer is accurate and directly relevant.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // NOTE: For a production application, you should handle this API call on a backend server to keep your API key secure.
+        // For this local, single-file demo, we will use the API key directly.
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=";
+        const apiKey = "AIzaSyDNQywgRKooPvxYCFWk-SNXfhytqHriP5Q"; // YOUR API KEY IS HERE
+
+        const questionInput = document.getElementById('question');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const fileCountSpan = document.getElementById('file-count');
+        const clearBtn = document.getElementById('clear-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const mainInterface = document.getElementById('main-interface');
+        const reportView = document.getElementById('report-view');
+        const backToHomeBtn = document.getElementById('back-to-home-btn');
+        const historyToggleBtn = document.getElementById('history-toggle');
+        const pastReportsList = document.getElementById('past-reports-list');
+        const questionCountSpan = document.getElementById('question-count');
+        const reportCountSpan = document.getElementById('report-count');
+        const dropArea = document.getElementById('drop-area');
+
+        const geminiModal = document.getElementById('gemini-modal');
+        const aboutGeminiBtn = document.getElementById('about-gemini-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        const reportQuestionEl = document.getElementById('report-question');
+        const reportFreshnessEl = document.getElementById('report-freshness');
+        const reportTabsContainer = document.getElementById('report-tabs');
+        const summaryContentEl = document.getElementById('summary-content');
+        const sourcesContentEl = document.getElementById('sources-content');
+        const insightsContentEl = document.getElementById('insights-content');
+
+        let uploadedFiles = [];
+        let usageCounts = { questions: 0, reports: 0 };
+        let pastReports = [];
+        let processingStates = [
+            'Gathering sources...',
+            'Synthesizing information...',
+            'Formatting report...',
+            'Complete!'
+        ];
+        
+        // This is a simple, simulated live data source.
+        // In a real application, this would be a Pathway/backend service.
+        const liveKnowledgeBase = [
+            { name: "AI Drug Discovery Trends 2025", content: "Key trends in AI drug discovery for 2025 include the rise of generative AI models for novel compound design, a greater focus on integrating multi-omics data (genomics, proteomics), and the application of AI to optimize clinical trial patient selection." },
+            { name: "Startup News: Tech Funding", content: "Venture capital funding for AI-powered health technology startups has reached record highs in the last two quarters, with significant investment flowing into companies specializing in personalized medicine and automated drug screening." }
+        ];
+
+        const showView = (viewId) => {
+            if (viewId === 'report-view') {
+                mainInterface.classList.add('hidden');
+                reportView.classList.remove('hidden');
+            } else {
+                reportView.classList.add('hidden');
+                mainInterface.classList.remove('hidden');
+            }
+        };
+
+        const updateFileList = () => {
+            fileList.innerHTML = '';
+            uploadedFiles.forEach(file => {
+                const fileChip = document.createElement('div');
+                fileChip.className = 'flex items-center bg-gray-800 rounded-full px-3 py-1 text-sm text-gray-400 border border-purple-500/20';
+                fileChip.innerHTML = `
+                    <span class="truncate max-w-[120px] font-cardo">${file.name}</span>
+                    <button type="button" class="ml-2 text-red-400 hover:text-red-500 focus:outline-none remove-file-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    </button>
+                `;
+                fileChip.querySelector('.remove-file-btn').addEventListener('click', () => {
+                    const index = uploadedFiles.indexOf(file);
+                    if (index > -1) {
+                        uploadedFiles.splice(index, 1);
+                    }
+                    updateFileList();
+                });
+                fileList.appendChild(fileChip);
+            });
+            fileCountSpan.textContent = uploadedFiles.length;
+        };
+
+        const updateDashboardCounts = () => {
+            questionCountSpan.textContent = usageCounts.questions;
+            reportCountSpan.textContent = usageCounts.reports;
+        };
+
+        const updateHistoryList = () => {
+            if (pastReports.length > 0) {
+                pastReportsList.innerHTML = `<ul class="space-y-4"></ul>`;
+                const ul = pastReportsList.querySelector('ul');
+                pastReports.forEach((report, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'rounded-lg border border-purple-500/20 p-4 hover:bg-gray-800/50 transition-colors duration-200 font-cardo';
+                    li.innerHTML = `
+                        <button class="w-full text-left">
+                            <h3 class="text-md font-semibold text-purple-200">${report.question.slice(0, 50)}...</h3>
+                            <p class="text-xs text-gray-500">${report.timestamp}</p>
+                        </button>
+                    `;
+                    li.querySelector('button').addEventListener('click', () => {
+                        renderReport(report);
+                    });
+                    ul.appendChild(li);
+                });
+                pastReportsList.classList.remove('max-h-0', 'opacity-0');
+                pastReportsList.classList.add('max-h-[500px]', 'opacity-100');
+            } else {
+                pastReportsList.innerHTML = `<p class="text-sm text-gray-500 text-center font-cardo">No reports yet.</p>`;
+            }
+        };
+
+        const readFileContent = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    let content = '';
+                    if (file.type === 'application/pdf') {
+                        const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            content += textContent.items.map(item => item.str).join(' ') + '\n\n';
+                        }
+                    } else {
+                        content = e.target.result;
+                    }
+                    resolve({ name: file.name, content });
+                };
+                reader.onerror = (e) => reject(e);
+
+                if (file.type === 'application/pdf') {
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            });
+        };
+
+        const generateReport = async () => {
+            const userQuestion = questionInput.value.trim();
+            if (!userQuestion || !apiKey || apiKey === "YOUR_API_KEY_HERE") {
+                alert("Please enter a question and ensure your API key is correct.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add('cursor-not-allowed', 'bg-purple-500/20');
+            submitBtn.classList.remove('btn-primary');
+            submitBtn.innerHTML = `
+                <span class="flex items-center justify-center font-josefin">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    ${processingStates[0]}
+                </span>
+            `;
+
+            usageCounts.questions += 1;
+            updateDashboardCounts();
+
+            let uploadedFileContents = [];
+            for (const file of uploadedFiles) {
+                const content = await readFileContent(file);
+                uploadedFileContents.push(content);
+            }
+
+            // Combine uploaded and live data for the RAG prompt.
+            const allSources = [...uploadedFileContents, ...liveKnowledgeBase];
+
+            let fullPrompt = `You are a world-class research assistant named KNOWLY. Your task is to provide a concise, structured report based *only* on the documents provided by the user and your integrated knowledge base. Do not use any external knowledge.
+
+**Instructions:**
+1.  Answer the user's question directly and concisely.
+2.  Summarize the key insights from the provided text.
+3.  For every fact or piece of information you include, provide an in-line citation linking to the source document like this: [Source: "Document Name"]. Do not use numerical citations.
+4.  If the information is not present in the provided documents, state that you cannot find the answer in the given context.
+5.  Extract key insights in a bulleted list format at the end.
+
+**Provided Documents:**
+---
+`;
+            allSources.forEach(doc => {
+                fullPrompt += `Document Name: "${doc.name}"\n\n${doc.content}\n\n`;
+            });
+            fullPrompt += `---
+**User's Question:**
+${userQuestion}`;
+
+            for (let i = 1; i < processingStates.length; i++) {
+                submitBtn.innerHTML = `
+                    <span class="flex items-center justify-center font-josefin">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-purple-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        ${processingStates[i]}
+                    </span>
+                `;
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            try {
+                const payload = {
+                    contents: [{ parts: [{ text: fullPrompt }] }],
+                };
+
+                const response = await fetch(`${API_URL}${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!generatedText) {
+                    throw new Error("Failed to get a valid response from the API.");
+                }
+
+                const [reportContent, insightsText] = generatedText.split('**Key Insights:**');
+
+                const newReport = {
+                    question: userQuestion,
+                    content: reportContent.trim(),
+                    sources: allSources.map(file => ({ title: file.name, url: 'local-file' })),
+                    timestamp: new Date().toLocaleTimeString(),
+                    freshness: 'Last updated: just now',
+                    insights: insightsText ? insightsText.split('\n').filter(line => line.trim().startsWith('*')).map(line => ({
+                        title: line.trim().substring(1).trim(),
+                        description: ''
+                    })) : [],
+                };
+
+                pastReports.unshift(newReport);
+                usageCounts.reports += 1;
+                updateDashboardCounts();
+                updateHistoryList();
+                renderReport(newReport);
+
+            } catch (error) {
+                console.error("Error generating report:", error);
+                const errorReport = {
+                    question: userQuestion,
+                    content: 'An error occurred while generating the report. Please ensure your API key is correct and you have an internet connection. Check the console for more details.',
+                    sources: [],
+                    timestamp: new Date().toLocaleTimeString(),
+                    freshness: 'Failed',
+                    insights: [],
+                };
+                renderReport(errorReport);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('cursor-not-allowed', 'bg-purple-500/20');
+                submitBtn.classList.add('btn-primary');
+                submitBtn.innerHTML = 'Generate Report';
+            }
+        };
+
+        const renderReport = (report) => {
+            const tabButtons = reportTabsContainer.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active-tab', 'bg-purple-600/30', 'text-purple-300'));
+            tabButtons[0].classList.add('active-tab', 'bg-purple-600/30', 'text-purple-300');
+
+            reportQuestionEl.textContent = report.question;
+            reportFreshnessEl.textContent = report.freshness;
+
+            const summaryHtml = report.content.replace(/\[Source: "([^"]+)"\]/g, (match, p1) => {
+                const sourceIndex = report.sources.findIndex(source => source.title === p1) + 1;
+                return sourceIndex > 0 ? `<sup class="ml-1 text-purple-400 font-bold citation" data-source-title="${p1}" data-source-index="${sourceIndex}">[${sourceIndex}]</sup>` : '';
+            });
+            summaryContentEl.innerHTML = `<div class="text-gray-300 leading-relaxed font-cardo">${summaryHtml}</div>`;
+
+            sourcesContentEl.innerHTML = report.sources.length > 0 ? `
+                <ol class="list-decimal pl-5 space-y-2 font-cardo">
+                    ${report.sources.map((source, index) => `
+                        <li>
+                            <span class="text-purple-400" id="source-${index + 1}">
+                                ${source.title}
+                            </span>
+                        </li>
+                    `).join('')}
+                </ol>
+            ` : `<p class="text-sm text-gray-500 text-center font-cardo">No sources provided.</p>`;
+
+            insightsContentEl.innerHTML = report.insights.length > 0 ? `
+                <ul class="list-disc pl-5 space-y-2 font-cardo">
+                    ${report.insights.map((insight, index) => `
+                        <li>
+                            <span class="text-purple-300">${insight.title}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            ` : `<p class="text-sm text-gray-500 text-center font-cardo">No insights were generated.</p>`;
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            summaryContentEl.classList.remove('hidden');
+
+            document.querySelectorAll('.citation').forEach(citation => {
+                citation.addEventListener('click', () => {
+                    const sourceId = `source-${citation.dataset.sourceIndex}`;
+                    const sourcesTab = document.querySelector('.tab-btn:nth-child(2)');
+                    sourcesTab.click();
+                    document.getElementById(sourceId).scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            showView('report-view');
+        };
+
+        window.onload = () => {
+             pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+             updateDashboardCounts();
+             updateHistoryList();
+        };
+
+        submitBtn.addEventListener('click', generateReport);
+        backToHomeBtn.addEventListener('click', () => showView('main-interface'));
+        clearBtn.addEventListener('click', () => {
+            questionInput.value = '';
+            uploadedFiles = [];
+            updateFileList();
+        });
+        fileInput.addEventListener('change', (e) => {
+            uploadedFiles = [...e.target.files].slice(0, 100);
+            updateFileList();
+        });
+
+        historyToggleBtn.addEventListener('click', () => {
+            const isVisible = pastReportsList.classList.contains('max-h-[500px]');
+            if (isVisible) {
+                pastReportsList.classList.remove('max-h-[500px]', 'opacity-0');
+                pastReportsList.classList.add('max-h-0', 'opacity-0');
+                historyToggleBtn.querySelector('span:last-child').textContent = '▼';
+            } else {
+                pastReportsList.classList.remove('max-h-0', 'opacity-0');
+                pastReportsList.classList.add('max-h-[500px]', 'opacity-100');
+                historyToggleBtn.querySelector('span:last-child').textContent = '▲';
+            }
+        });
+
+        reportTabsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                const tabs = reportTabsContainer.querySelectorAll('.tab-btn');
+                tabs.forEach(btn => btn.classList.remove('active-tab', 'bg-purple-600/30', 'text-purple-300'));
+                e.target.classList.add('active-tab', 'bg-purple-600/30', 'text-purple-300');
+
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                const tabIndex = Array.from(tabs).indexOf(e.target);
+                document.querySelectorAll('.tab-content')[tabIndex].classList.remove('hidden');
+            }
+        });
+
+        dropArea.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('ring-2', 'ring-purple-500', 'bg-purple-100/50');
+        });
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-100/50');
+        });
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('ring-2', 'ring-purple-500', 'bg-purple-100/50');
+            const files = e.dataTransfer.files;
+            uploadedFiles = [...files].slice(0, 100);
+            updateFileList();
+        });
+
+        // Modal functionality
+        aboutGeminiBtn.addEventListener('click', () => {
+            geminiModal.style.display = 'flex';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            geminiModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target == geminiModal) {
+                geminiModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
